@@ -121,13 +121,11 @@ void QMetaThemeStyle::setFont()
    QApplication::setFont(qfont, "QMenuBar");
    QApplication::setFont(qfont, "QPopupMenu");
    QApplication::setFont(qfont, "KPopupTitle");
-
-   // "patch" standard QStyleSheet to follow our fonts
-   /*Q3StyleSheet *sheet = Q3StyleSheet::defaultSheet();
-   sheet->item("pre")->setFontFamily(qfont.family());
-   sheet->item("code")->setFontFamily(qfont.family());
-   sheet->item("tt")->setFontFamily(qfont.family());*/
 }
+
+#define CHECKMODE(mode) ((((int)opt->state) | mode) == ((int)opt->state))
+#define DRAWBEVEL(mode,type) mt_engine->draw_widget(mt_engine,p,NULL,type,mode, \
+    opt->rect.x(),opt->rect.y(),opt->rect.width(),opt->rect.height(),&data);
 
 void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt,
                                   QPainter *p,
@@ -137,41 +135,167 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
     //data.background_color =
     mt_color_set(data.background_color, qpalette.background().color().red(), qpalette.background().color().green(), qpalette.background().color().blue());
    switch (element) {
-      case CE_PushButton:
+      case CE_PushButtonBevel:
    {
-#define DRAWBUTTON(mode) mt_engine->draw_widget(mt_engine,p,NULL,MT_BUTTON,mode, \
-       optbtn->rect.x(),optbtn->rect.y(),optbtn->rect.width(),optbtn->rect.height(),&data); \
-QString rstr = optbtn->text; \
-QRect targetRect(optbtn->rect.topLeft() + QPoint(mt_engine->metric_size[MT_BUTTON_BORDER].x,mt_engine->metric_size[MT_BUTTON_BORDER].y) \
- ,optbtn->rect.bottomRight()); \
-targetRect.moveTo(mt_engine->metric_size[MT_BUTTON_BORDER].x,mt_engine->metric_size[MT_BUTTON_BORDER].y); \
-MT_QT_STRING str = {this,targetRect,Qt::AlignCenter,qpalette,rstr,optbtn->fontMetrics.height(),&qpalette.buttonText().color()}; \
-mt_engine->draw_string(mt_engine,p,MT_BUTTON,mode,&str);
-#define CHECKMODEBUTTON(mode) ((((int)optbtn->state) | mode) == ((int)optbtn->state))
+#define DRAWBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_BUTTON)
          const QStyleOptionButton *optbtn = (const QStyleOptionButton*)opt;
          qDebug("%d %d %d %d",((int)optbtn->state),
-                CHECKMODEBUTTON(State_Enabled),CHECKMODEBUTTON(State_Raised),CHECKMODEBUTTON(State_MouseOver));
-         if(CHECKMODEBUTTON(State_Enabled))
+                CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
+         if(CHECKMODE(State_Enabled))
          {
-             if(!CHECKMODEBUTTON(State_Raised))
+             if(!CHECKMODE(State_Raised))
              {
-                 DRAWBUTTON(MT_ACTIVE)
+                 DRAWBUTTONBEVEL(MT_ACTIVE)
              }
-             else if(!CHECKMODEBUTTON(State_MouseOver))
+             else if(!CHECKMODE(State_MouseOver))
              {
-                 DRAWBUTTON(MT_NORMAL)
+                 DRAWBUTTONBEVEL(MT_NORMAL)
              }
              else
              {
-                 qDebug("Mouse Active");
-                 DRAWBUTTON(MT_HOVER)
+                 qDebug("PushButton Mouse Active");
+                 DRAWBUTTONBEVEL(MT_HOVER)
              }
          }
          else
          {
-             DRAWBUTTON(MT_DISABLED)
+             DRAWBUTTONBEVEL(MT_DISABLED)
          }
    }
+         break;
+#undef DRAWBUTTONBEVEL
+         case CE_ScrollBarSlider:
+{
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_HANDLE)
+      if(CHECKMODE(State_Enabled))
+      {
+          if(CHECKMODE(State_Raised))
+          {
+              DRAWSCROLLBARBEVEL(MT_ACTIVE)
+          }
+          else if(!CHECKMODE(State_MouseOver))
+          {
+              DRAWSCROLLBARBEVEL(MT_NORMAL)
+          }
+          else
+          {
+              qDebug("Slider Mouse Active");
+              DRAWSCROLLBARBEVEL(MT_HOVER)
+          }
+      }
+      else
+      {
+          DRAWSCROLLBARBEVEL(MT_DISABLED)
+      }
+}
+#undef DRAWSCROLLBARBEVEL
+      break;
+   case CE_ScrollBarAddLine:
+       if(widget != NULL && widget->size().height() > widget->size().width())
+       {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_DOWN)
+           if(CHECKMODE(State_Enabled))
+           {
+               if(CHECKMODE(State_Raised))
+               {
+                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
+               }
+               else if(!CHECKMODE(State_MouseOver))
+               {
+                   DRAWSCROLLBARBEVEL(MT_NORMAL)
+               }
+               else
+               {
+                   qDebug("SubLine Mouse Active");
+                   DRAWSCROLLBARBEVEL(MT_HOVER)
+               }
+           }
+           else
+           {
+               DRAWSCROLLBARBEVEL(MT_DISABLED)
+           }
+#undef DRAWSCROLLBARBEVEL
+        }
+       else
+       {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_RIGHT)
+           if(CHECKMODE(State_Enabled))
+           {
+               if(CHECKMODE(State_Raised))
+               {
+                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
+               }
+               else if(!CHECKMODE(State_MouseOver))
+               {
+                   DRAWSCROLLBARBEVEL(MT_NORMAL)
+               }
+               else
+               {
+                   qDebug("SubLine Mouse Active");
+                   DRAWSCROLLBARBEVEL(MT_HOVER)
+               }
+           }
+           else
+           {
+               DRAWSCROLLBARBEVEL(MT_DISABLED)
+           }
+#undef DRAWSCROLLBARBEVEL
+        }
+        break;
+   case CE_ScrollBarSubLine:
+       if(widget != NULL && widget->size().height() > widget->size().width())
+       {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_UP)
+           if(CHECKMODE(State_Enabled))
+           {
+               if(CHECKMODE(State_Raised))
+               {
+                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
+               }
+               else if(!CHECKMODE(State_MouseOver))
+               {
+                   DRAWSCROLLBARBEVEL(MT_NORMAL)
+               }
+               else
+               {
+                   qDebug("SubLine Mouse Active");
+                   DRAWSCROLLBARBEVEL(MT_HOVER)
+               }
+           }
+           else
+           {
+               DRAWSCROLLBARBEVEL(MT_DISABLED)
+           }
+#undef DRAWSCROLLBARBEVEL
+        }
+       else
+       {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_LEFT)
+           if(CHECKMODE(State_Enabled))
+           {
+               if(CHECKMODE(State_Raised))
+               {
+                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
+               }
+               else if(!CHECKMODE(State_MouseOver))
+               {
+                   DRAWSCROLLBARBEVEL(MT_NORMAL)
+               }
+               else
+               {
+                   qDebug("SubLine Mouse Active");
+                   DRAWSCROLLBARBEVEL(MT_HOVER)
+               }
+           }
+           else
+           {
+               DRAWSCROLLBARBEVEL(MT_DISABLED)
+           }
+#undef DRAWSCROLLBARBEVEL
+        }
+        break;
+      case CE_CheckBox:
+         QWindowsStyle::drawControl(element,opt,p,widget);
          break;
       default:
          BaseStyle::drawControl(element, opt, p, widget);
@@ -183,8 +307,8 @@ QSize QMetaThemeStyle::sizeFromContents ( ContentsType type, const QStyleOption 
 {
     switch(type)
     {
-        case CE_PushButton:
-    {const QPushButton *button = (const QPushButton *)widget;
+        case CT_PushButton:
+    {   const QPushButton *button = (const QPushButton *)widget;
         const QStyleOptionButton *optbtn = (const QStyleOptionButton *)option;
         int w = optbtn->rect.size().width(), h = optbtn->rect.size().height();
         int fw = pixelMetric(PM_DefaultFrameWidth,option, widget) * 2;
@@ -200,6 +324,121 @@ QSize QMetaThemeStyle::sizeFromContents ( ContentsType type, const QStyleOption 
         return QSize(w, h);}
             break;
         default:
-            return BaseStyle::sizeFromContents(type,option,contentsSize,widget);
+            return QWindowsStyle::sizeFromContents(type,option,contentsSize,widget);
+    }
+}
+
+void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleOptionComplex * opt, QPainter * p, const QWidget * widget) const
+{
+    MT_WIDGET_DATA data;
+    switch(control)
+    {
+#define DRAWTOOLBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_TOOLBAR_ITEM)
+        case CC_ToolButton:
+            {
+        const QStyleOptionToolButton *optbtn = (const QStyleOptionToolButton*)opt;
+               qDebug("%d %d %d %d",((int)optbtn->state),
+                      CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
+               if(CHECKMODE(State_Enabled))
+               {
+                   if(!CHECKMODE(State_Raised))
+                   {
+                       DRAWTOOLBUTTONBEVEL(MT_ACTIVE)
+                   }
+                   else if(!CHECKMODE(State_MouseOver))
+                   {
+                       DRAWTOOLBUTTONBEVEL(MT_NORMAL)
+                   }
+                   else
+                   {
+                       qDebug("Mouse Active");
+                       DRAWTOOLBUTTONBEVEL(MT_HOVER)
+                   }
+               }
+               else
+               {
+                   DRAWTOOLBUTTONBEVEL(MT_DISABLED)
+               }
+               drawControl(CE_ToolButtonLabel,opt,p,widget);
+    }
+            break;
+        case CC_ScrollBar:
+            QWindowsStyle::drawComplexControl(control,opt,p,widget);
+        default:
+            BaseStyle::drawComplexControl(control,opt,p,widget);
+    }
+}
+
+void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOption * opt, QPainter * p, const QWidget * widget) const
+{
+    MT_WIDGET_DATA data;
+    data.flags = 0;
+    switch(element)
+    {
+        case PE_PanelButtonCommand:
+    {
+#define DRAWBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_BUTTON)
+        const QStyleOptionButton *optbtn = (const QStyleOptionButton*)opt;
+        qDebug("%d %d %d %d",((int)optbtn->state),
+               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
+        if(CHECKMODE(State_Enabled))
+        {
+            if(CHECKMODE(State_Raised))
+            {
+                DRAWBUTTONBEVEL(MT_ACTIVE)
+            }
+            else if(!CHECKMODE(State_MouseOver))
+            {
+                DRAWBUTTONBEVEL(MT_NORMAL)
+            }
+            else
+            {
+                qDebug("PushButton Mouse Active");
+                DRAWBUTTONBEVEL(MT_HOVER)
+            }
+        }
+        else
+        {
+            DRAWBUTTONBEVEL(MT_DISABLED)
+        }
+        break;
+#undef DRAWBUTTONBEVEL
+    }
+    case PE_IndicatorCheckBox:
+    {
+#define DRAWBOXBEVEL(mode) DRAWBEVEL(mode,MT_CHECK_BOX)
+        //QStyleOptionButton *optbtn = (QStyleOptionButton *)opt;
+        if(CHECKMODE(State_On))
+        {
+            data.flags |= MT_DRAW_MASK;
+            qDebug("Checkbox On");
+        }
+        qDebug("%d %d %d %d",((int)opt->state),
+               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
+        if(CHECKMODE(State_Enabled))
+        {
+            if(CHECKMODE(State_Raised))
+            {
+                DRAWBOXBEVEL(MT_ACTIVE)
+            }
+            else if(!CHECKMODE(State_MouseOver))
+            {
+                DRAWBOXBEVEL(MT_NORMAL)
+            }
+            else
+            {
+                qDebug("CheckBox Mouse Active");
+                DRAWBOXBEVEL(MT_HOVER)
+            }
+        }
+        else
+        {
+            DRAWBOXBEVEL(MT_DISABLED)
+        }
+        break;
+#undef DRAWBOXBEVEL
+    }
+        default:
+            BaseStyle::drawPrimitive(element,opt,p,widget);
     }
 }
