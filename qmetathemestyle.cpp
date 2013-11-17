@@ -295,6 +295,7 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
         }
         break;
       case CE_CheckBox:
+      case CE_RadioButton:
          QWindowsStyle::drawControl(element,opt,p,widget);
          break;
       default:
@@ -410,16 +411,64 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
         //QStyleOptionButton *optbtn = (QStyleOptionButton *)opt;
         if(CHECKMODE(State_On))
         {
-            data.flags |= MT_DRAW_MASK;
+            //data.flags |= MT_DRAW_MASK;
             qDebug("Checkbox On");
         }
         qDebug("%d %d %d %d",((int)opt->state),
                CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
         if(CHECKMODE(State_Enabled))
         {
-            if(CHECKMODE(State_Raised))
+            if(CHECKMODE(State_On))
             {
-                DRAWBOXBEVEL(MT_ACTIVE)
+                if(!CHECKMODE(State_MouseOver))
+                {
+                    DRAWBOXBEVEL(MT_ACTIVE)
+                }
+                else
+                {
+                    DRAWBOXBEVEL(MT_ACTIVE | MT_HOVER)
+                }
+            }
+            else if(!CHECKMODE(State_MouseOver))
+            {
+                DRAWBOXBEVEL(MT_NORMAL)
+            }
+            else
+            {
+                qDebug("CheckBox Mouse Active");
+                DRAWBOXBEVEL(MT_HOVER)
+            }
+        }
+        else
+        {
+            DRAWBOXBEVEL(MT_DISABLED)
+        }
+        break;
+#undef DRAWBOXBEVEL
+    }
+        case PE_IndicatorRadioButton:
+    {
+#define DRAWBOXBEVEL(mode) DRAWBEVEL(mode,MT_RADIO_BOX)
+        //QStyleOptionButton *optbtn = (QStyleOptionButton *)opt;
+        if(CHECKMODE(State_On))
+        {
+            //data.flags |= MT_DRAW_MASK;
+            qDebug("Checkbox On");
+        }
+        qDebug("%d %d %d %d",((int)opt->state),
+               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
+        if(CHECKMODE(State_Enabled))
+        {
+            if(CHECKMODE(State_On))
+            {
+                if(!CHECKMODE(State_MouseOver))
+                {
+                    DRAWBOXBEVEL(MT_ACTIVE)
+                }
+                else
+                {
+                    DRAWBOXBEVEL(MT_ACTIVE | MT_HOVER)
+                }
             }
             else if(!CHECKMODE(State_MouseOver))
             {
