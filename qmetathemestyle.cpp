@@ -126,6 +126,11 @@ void QMetaThemeStyle::setFont()
 #define CHECKMODE(mode) ((((int)opt->state) | mode) == ((int)opt->state))
 #define DRAWBEVEL(mode,type) mt_engine->draw_widget(mt_engine,p,NULL,type,mode, \
     opt->rect.x(),opt->rect.y(),opt->rect.width(),opt->rect.height(),&data);
+#define DRAWSUB(mode,type,ar) mt_engine->draw_widget(mt_engine,p,NULL,type,mode, \
+    ar.x(),ar.y(),ar.width(),ar.height(),&data);
+
+#define querySubControlMetrics(control, widget, mode, opt) \
+    proxy()->subControlRect(control, opt, mode, widget)
 
 void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt,
                                   QPainter *p,
@@ -164,136 +169,106 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
    }
          break;
 #undef DRAWBUTTONBEVEL
-         case CE_ScrollBarSlider:
-{
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_HANDLE)
-      if(CHECKMODE(State_Enabled))
-      {
-          if(CHECKMODE(State_Raised))
-          {
-              DRAWSCROLLBARBEVEL(MT_ACTIVE)
-          }
-          else if(!CHECKMODE(State_MouseOver))
-          {
-              DRAWSCROLLBARBEVEL(MT_NORMAL)
-          }
-          else
-          {
-              qDebug("Slider Mouse Active");
-              DRAWSCROLLBARBEVEL(MT_HOVER)
-          }
+
+   case CE_TabBarTab:
+       proxy()->drawControl(CE_TabBarTabShape,opt,p,widget);;
+       proxy()->drawControl(CE_TabBarTabLabel,opt,p,widget);;
+       break;
+   case CE_TabBarTabShape:
+   {
+       const QStyleOptionTab *opttab = (QStyleOptionTab*)opt;
+       const QTabBar *tb = (const QTabBar *)widget;
+       const int t = tb->currentIndex();
+       MT_WIDGET_DATA data;
+
+       data.widget = (MT_WIDGET)widget;
+
+       data.gap_position = (tb->shape() == QTabBar::RoundedNorth || tb->shape() == QTabBar::TriangularNorth)? MT_POSITION_TOP : MT_POSITION_BOTTOM;
+       data.gap_x = 0;
+       data.gap_width = 0;
+
+       data.flags = 0;
+       if (opttab->position == opttab->Beginning || opttab->position == opttab->OnlyOneTab)
+           data.flags |= MT_NOTEBOOK_FIRST_VISIBLE_TAB | MT_NOTEBOOK_FIRST_TAB;
+       if (opttab->position == opttab->End || opttab->position == opttab->OnlyOneTab)
+           data.flags |= MT_NOTEBOOK_LAST_TAB;
+
+       // TODO: special case: Konsole
+       /*
+      if (tb->parent() && tb->parent()->parent() && tb->parent()->parent()->inherits("Konsole")) {
+         data.flags &= ~(MT_NOTEBOOK_FIRST_VISIBLE_TAB | MT_NOTEBOOK_FIRST_TAB);
       }
-      else
-      {
-          DRAWSCROLLBARBEVEL(MT_DISABLED)
-      }
-}
-#undef DRAWSCROLLBARBEVEL
-      break;
-   case CE_ScrollBarAddLine:
-       if(widget != NULL && widget->size().height() > widget->size().width())
+      */
+       QRect r = opt->rect;
+       qDebug() << "Tab Rect: " << r << endl;
+       int state;
+       //state = 0;
+       if(CHECKMODE(State_Enabled))
        {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_DOWN)
-           if(CHECKMODE(State_Enabled))
+           if(CHECKMODE(State_Selected))
            {
-               if(CHECKMODE(State_Raised))
-               {
-                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
-               }
-               else if(!CHECKMODE(State_MouseOver))
-               {
-                   DRAWSCROLLBARBEVEL(MT_NORMAL)
-               }
-               else
-               {
-                   qDebug("SubLine Mouse Active");
-                   DRAWSCROLLBARBEVEL(MT_HOVER)
-               }
+               state = MT_SELECTED;
+           }
+           else if(!CHECKMODE(State_MouseOver))
+           {
+               state = MT_NORMAL;
            }
            else
            {
-               DRAWSCROLLBARBEVEL(MT_DISABLED)
+               state = MT_HOVER;
            }
-#undef DRAWSCROLLBARBEVEL
-        }
+       }
        else
        {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_RIGHT)
-           if(CHECKMODE(State_Enabled))
-           {
-               if(CHECKMODE(State_Raised))
-               {
-                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
-               }
-               else if(!CHECKMODE(State_MouseOver))
-               {
-                   DRAWSCROLLBARBEVEL(MT_NORMAL)
-               }
-               else
-               {
-                   qDebug("SubLine Mouse Active");
-                   DRAWSCROLLBARBEVEL(MT_HOVER)
-               }
+           state = MT_DISABLED;
+       }
+       p->save();
+       p->setClipRect(r);
+       mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_NOTEBOOK_TAB, state, r.x(), r.y(), r.width(), r.height(), &data);
+       p->restore();
+       break;
+   }
+#if 0
+   case CE_TabBarTabLabel:
+   {
+       //if (opt.isDefault()) break;
+
+       const QStyleOptionTab *opttab = (QStyleOptionTab*)opt;
+       //if(opttab->)
+       const QTabBar *tb = (const QTabBar *)widget;
+
+       const int t = tb->currentIndex();
+       QRect tr = opt->rect;
+       if (t == tb->currentIndex()) {
+           if (tb->shape() == QTabBar::RoundedNorth || tb->shape() == QTabBar::TriangularNorth) {
+               tr.adjust(0, mt_engine->metric[MT_NOTEBOOK_TEXT_OFFSET],0,0);
            }
-           else
-           {
-               DRAWSCROLLBARBEVEL(MT_DISABLED)
+           else {
+               tr.adjust(0, -mt_engine->metric[MT_NOTEBOOK_TEXT_OFFSET],0,0);
            }
-#undef DRAWSCROLLBARBEVEL
-        }
-        break;
-   case CE_ScrollBarSubLine:
-       if(widget != NULL && widget->size().height() > widget->size().width())
-       {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_UP)
-           if(CHECKMODE(State_Enabled))
-           {
-               if(CHECKMODE(State_Raised))
-               {
-                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
-               }
-               else if(!CHECKMODE(State_MouseOver))
-               {
-                   DRAWSCROLLBARBEVEL(MT_NORMAL)
-               }
-               else
-               {
-                   qDebug("SubLine Mouse Active");
-                   DRAWSCROLLBARBEVEL(MT_HOVER)
-               }
-           }
-           else
-           {
-               DRAWSCROLLBARBEVEL(MT_DISABLED)
-           }
-#undef DRAWSCROLLBARBEVEL
-        }
-       else
-       {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_LEFT)
-           if(CHECKMODE(State_Enabled))
-           {
-               if(CHECKMODE(State_Raised))
-               {
-                   DRAWSCROLLBARBEVEL(MT_ACTIVE)
-               }
-               else if(!CHECKMODE(State_MouseOver))
-               {
-                   DRAWSCROLLBARBEVEL(MT_NORMAL)
-               }
-               else
-               {
-                   qDebug("SubLine Mouse Active");
-                   DRAWSCROLLBARBEVEL(MT_HOVER)
-               }
-           }
-           else
-           {
-               DRAWSCROLLBARBEVEL(MT_DISABLED)
-           }
-#undef DRAWSCROLLBARBEVEL
-        }
-        break;
+       }
+
+       qDebug() << "Text Rect: " << tr << endl;
+
+       int alignment = Qt::AlignCenter/* | ShowPrefix;
+#if QT_VERSION >= 0x030300
+       if (!styleHint(SH_UnderlineAccelerator, widget, QStyleOption::Default, 0)) {
+           alignment |= NoAccel;
+       }
+#endif*/;
+
+       //drawItem(p, tr, alignment, qpalette, opt->state & State_Enabled, 0, t->text());
+       drawItemText(p,tr,alignment,qpalette,true,opttab->text);
+
+       int state;
+       state = 0;
+       QRect r = opt->rect;
+       if ((opt->state & State_HasFocus) && !tb->tabText(t).isEmpty()) {
+           mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_FOCUS_TAB, state, r.x(), r.y(), r.width(), r.height(), &data);
+       }
+       break;
+   }
+#endif
       case CE_CheckBox:
       case CE_RadioButton:
          QWindowsStyle::drawControl(element,opt,p,widget);
@@ -332,6 +307,7 @@ QSize QMetaThemeStyle::sizeFromContents ( ContentsType type, const QStyleOption 
 void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleOptionComplex * opt, QPainter * p, const QWidget * widget) const
 {
     MT_WIDGET_DATA data;
+    mt_color_set(data.background_color, qpalette.background().color().red(), qpalette.background().color().green(), qpalette.background().color().blue());
     switch(control)
     {
 #define DRAWTOOLBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_TOOLBAR_ITEM)
@@ -363,8 +339,237 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
                drawControl(CE_ToolButtonLabel,opt,p,widget);
     }
             break;
-        case CC_ScrollBar:
+#if 0
+    case CC_ComboBox:
+        if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt))
+        {
+            State flags = cmb->state;
+            SubControls sub = cmb->subControls;
+            if (sub & SC_ComboBoxEditField) {
+                if (cmb->frame) {
+                    int stateId;
+                    if (!(flags & State_Enabled))
+                        stateId = MT_DISABLED;
+                    /*else if (flags & State_HasFocus)
+                        stateId = MT_FOCUSED;*/
+                    else
+                        stateId = MT_NORMAL;
+                    //XPThemeData theme(widget, p, QLatin1String("EDIT"), partId, stateId, r);
+                    //d->drawBackground(theme);
+                    DRAWBEVEL(stateId,MT_ENTRY)
+                } else {
+                    QBrush editBrush = cmb->palette.brush(QPalette::Base);
+                    p->fillRect(opt->rect, editBrush);
+                }
+                if (!cmb->editable) {
+                    QRect re = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxEditField, widget);
+                    if (opt->state & State_HasFocus) {
+                        p->fillRect(re, opt->palette.highlight());
+                        p->setPen(opt->palette.highlightedText().color());
+                        p->setBackground(opt->palette.highlight());
+                    } else {
+                        p->fillRect(re, opt->palette.base());
+                        p->setPen(opt->palette.text().color());
+                        p->setBackground(opt->palette.base());
+                    }
+                }
+            }
+            if (sub & SC_ComboBoxArrow) {
+                int stateId;
+                /*XPThemeData theme(widget, p, QLatin1String("COMBOBOX"));
+                theme.rect = proxy()->subControlRect(CC_ComboBox, option, SC_ComboBoxArrow, widget);
+                partId = CP_DROPDOWNBUTTON;
+                if (!(flags & State_Enabled))
+                    stateId = CBXS_DISABLED;
+                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_Sunken))
+                    stateId = CBXS_PRESSED;
+                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_MouseOver))
+                    stateId = CBXS_HOT;
+                else
+                    stateId = CBXS_NORMAL;
+                theme.partId = partId;
+                theme.stateId = stateId;
+                d->drawBackground(theme);*/
+                QRect subrect = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow, widget);
+                if (!(flags & State_Enabled))
+                    stateId = MT_DISABLED;
+                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_Sunken))
+                    stateId = MT_ACTIVE;
+                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_MouseOver))
+                    stateId = MT_HOVER;
+                else
+                    stateId = MT_NORMAL;
+                DRAWSUB(stateId,MT_CHOICE_BUTTON,subrect)
+            }
+        }
+        break;
+#endif
+    case CC_ComboBox:
+    {
+        if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt))
+        {
+            QRect re;
+            int state;
+            int flags = opt->state;
+            //if (hoverWidget == widget) state |= MT_HOVER;
+            if (!(flags & State_Enabled))
+                state = MT_DISABLED;
+            else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_Sunken))
+                state = MT_ACTIVE;
+            else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_MouseOver))
+                state = MT_HOVER;
+            else
+                state = MT_NORMAL;
+            p->save();
+
+            if (cmb->subControls & SC_ComboBoxFrame) {
+                //re = querySubControlMetrics(control, widget, SC_ComboBoxFrame, opt);
+                re = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxFrame, widget);
+                p->setClipRect(re);
+                mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_CHOICE, state, re.x(), re.y(), re.width(), re.height(), &data);
+            }
+            if (cmb->subControls & SC_ComboBoxEditField) {
+                //re = querySubControlMetrics(control, widget, SC_ComboBoxEditField, opt);
+                re = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxEditField, widget);
+            }
+            if (cmb->subControls & SC_ComboBoxArrow) {
+                //re = querySubControlMetrics(control, widget, SC_ComboBoxArrow, opt);
+                re = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow, widget);
+                p->setClipRect(re);
+                mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_CHOICE_BUTTON, state, re.x(), re.y(), re.width(), re.height(), &data);
+            }
+
+            p->restore();
+            break;
+        }
+    }
+#if 0
+    case CC_ScrollBar:
             QWindowsStyle::drawComplexControl(control,opt,p,widget);
+            break;
+#endif
+    case CC_ScrollBar:
+    {
+        const QScrollBar *scrollbar = (const QScrollBar *) widget;
+        QRect addline, subline, addpage, subpage, slider, first, last;
+
+        int controls = opt->subControls;
+        int active = opt->activeSubControls;
+        int flags = opt->state;
+        int state = MT_NORMAL;
+        data.flags = 0;
+        if (scrollbar->minimum() == scrollbar->maximum() || (flags & State_Sunken)) {
+            data.flags |= MT_SCROLLBAR_UNSCROLLABLE;
+        }
+
+        subline = querySubControlMetrics(control, widget, SC_ScrollBarSubLine, opt);
+        addline = querySubControlMetrics(control, widget, SC_ScrollBarAddLine, opt);
+        subpage = querySubControlMetrics(control, widget, SC_ScrollBarSubPage, opt);
+        addpage = querySubControlMetrics(control, widget, SC_ScrollBarAddPage, opt);
+        slider  = querySubControlMetrics(control, widget, SC_ScrollBarSlider,  opt);
+        first   = querySubControlMetrics(control, widget, SC_ScrollBarFirst,   opt);
+        last    = querySubControlMetrics(control, widget, SC_ScrollBarLast,    opt);
+
+        if ((controls & SC_ScrollBarSubLine) && subline.isValid()) {
+            if (/*hoverWidget == widget*/CHECKMODE(State_MouseOver) && hoverPart == 2 && !scrollbar->isSliderDown()) state |= MT_HOVER;
+
+            mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL,
+                                   (scrollbar->orientation() == Qt::Horizontal)? MT_SCROLLBAR_ARROW_LEFT : MT_SCROLLBAR_ARROW_UP,
+                                   state | (active == SC_ScrollBarSubLine? MT_ACTIVE : 0),
+                                   subline.x(), subline.y(), subline.width(), subline.height(),
+                                   &data);
+
+            state &= ~MT_HOVER;
+        }
+
+        if ((controls & SC_ScrollBarAddLine) && addline.isValid()) {
+            if (/*hoverWidget == widget*/CHECKMODE(State_MouseOver) && hoverPart == 3 && !scrollbar->isSliderDown()) state = MT_HOVER;
+            if(active == SC_ScrollBarAddLine) state = MT_ACTIVE;
+            mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL,
+                                   (scrollbar->orientation() == Qt::Horizontal)? MT_SCROLLBAR_ARROW_RIGHT : MT_SCROLLBAR_ARROW_DOWN,
+                                   state,
+                                   addline.x(), addline.y(), addline.width(), addline.height(),
+                                   &data);
+
+            state &= ~MT_HOVER;
+        }
+
+        if ((controls & SC_ScrollBarSlider) && slider.isValid()) {
+            data.orientation = (scrollbar->orientation() == Qt::Horizontal)? MT_HORIZONTAL : MT_VERTICAL;
+
+            if (data.flags & MT_SCROLLBAR_UNSCROLLABLE) {
+                QRegion region = slider;
+                p->save();
+                p->setClipping(true);
+                p->setClipRegion(region);
+                mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL,
+                                       MT_SCROLLBAR,
+                                       state | (active == SC_ScrollBarSlider? MT_ACTIVE : 0),
+                                       widget->rect().x(), widget->rect().y(), widget->rect().width(), widget->rect().height(),
+                                       &data);
+                p->restore();
+                return;
+            }
+
+            if ((hoverWidget == widget && hoverPart == 1) || scrollbar->isSliderDown()) state |= MT_HOVER;
+
+            if (data.orientation == MT_VERTICAL) {
+                data.handle_position = slider.y() - subpage.y();
+                data.groove_size = subpage.height() + slider.height() + addpage.height();
+            }
+            else {
+                data.handle_position = slider.x() - subpage.x();
+                data.groove_size = subpage.width() + slider.width() + addpage.width();
+            }
+
+            mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL,
+                                   MT_SCROLLBAR_HANDLE,
+                                   state | (active == SC_ScrollBarSlider? MT_ACTIVE : 0),
+                                   slider.x(), slider.y(), slider.width(), slider.height(),
+                                   &data);
+
+            state &= ~MT_HOVER;
+        }
+
+        if (((controls & SC_ScrollBarSubPage) && subpage.isValid()) ||
+                ((controls & SC_ScrollBarAddPage) && addpage.isValid())) {
+            QRegion region;
+            p->save();
+            p->setClipping(true);
+            if (controls & SC_ScrollBarSubPage) region = region.unite(subpage);
+            if (controls & SC_ScrollBarAddPage) region = region.unite(addpage);
+            p->setClipRegion(region);
+
+            MT_WIDGET_DATA data;
+            data.widget = (MT_WIDGET)widget;
+            data.orientation = (scrollbar->orientation() == Qt::Horizontal)? MT_HORIZONTAL : MT_VERTICAL;
+
+            if (active == SC_ScrollBarSubPage) data.flags |= MT_SCROLLBAR_SUBPAGE_ACTIVE;
+            if (active == SC_ScrollBarAddPage) data.flags |= MT_SCROLLBAR_ADDPAGE_ACTIVE;
+
+            if (data.flags & (MT_SCROLLBAR_SUBPAGE_ACTIVE | MT_SCROLLBAR_ADDPAGE_ACTIVE)) {
+                if (data.orientation == MT_VERTICAL) {
+                    data.handle_position = slider.y() - subpage.y();
+                    data.groove_size = slider.height();
+                }
+                else {
+                    data.handle_position = slider.x() - subpage.x();
+                    data.groove_size = slider.width();
+                }
+            }
+
+            mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL,
+                                   MT_SCROLLBAR,
+                                   state,
+                                   widget->rect().x(),
+                                   widget->rect().y(),
+                                   widget->rect().width(),
+                                   widget->rect().height(),
+                                   &data);
+            p->restore();
+        }
+        break;
+    }
         default:
             BaseStyle::drawComplexControl(control,opt,p,widget);
     }
@@ -373,6 +578,7 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
 void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOption * opt, QPainter * p, const QWidget * widget) const
 {
     MT_WIDGET_DATA data;
+    mt_color_set(data.background_color, qpalette.background().color().red(), qpalette.background().color().green(), qpalette.background().color().blue());
     data.flags = 0;
     switch(element)
     {
@@ -489,5 +695,45 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
     }
         default:
             BaseStyle::drawPrimitive(element,opt,p,widget);
+    }
+}
+
+int QMetaThemeStyle::pixelMetric ( PixelMetric metric, const QStyleOption * opt, const QWidget * w) const
+{
+    switch(metric)
+    {
+    case PM_TabBarTabOverlap: // number of pixels the tabs should overlap.
+       return mt_engine->metric[MT_NOTEBOOK_TAB_OVERLAP];
+
+    case PM_TabBarTabHSpace: // extra space added to the tab width.
+       return 24;
+
+    case PM_TabBarTabVSpace: // extra space added to the tab height.
+       return 10;
+
+    case PM_TabBarBaseHeight: // height of the area between the tab bar and the tab pages.
+       return 0;
+
+    case PM_TabBarBaseOverlap: // number of pixels the tab bar overlaps the tab bar base.
+       return mt_engine->metric[MT_NOTEBOOK_OVERLAP] - 2;
+
+    case PM_TabBarScrollButtonWidth:
+       return mt_engine->metric[MT_NOTEBOOK_ARROW_WIDTH];
+
+    case PM_TabBarTabShiftHorizontal: // horizontal pixel shift when a tab is selected.
+       return 0;
+
+    case PM_TabBarTabShiftVertical: // vertical pixel shift when a tab is selected.
+    {
+       if (w) {
+          const QTabBar *tb = static_cast<const QTabBar*>(w);
+          if (tb->shape() == QTabBar::RoundedSouth || tb->shape() == QTabBar::TriangularSouth) {
+             return -mt_engine->metric[MT_NOTEBOOK_TEXT_OFFSET];
+          }
+       }
+       return mt_engine->metric[MT_NOTEBOOK_TEXT_OFFSET];
+    }
+        default:
+        return QWindowsStyle::pixelMetric(metric,opt,w);
     }
 }
