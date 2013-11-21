@@ -8,3 +8,5 @@ Then
 	qmake MetaThemeQ4.pro && make
 
 OK!
+
+The original metatheme is maintained at https://github.com/EasternHeart/metatheme
