@@ -2,6 +2,7 @@
 
 #include "metathemeQt.h"
 
+#include <algorithm>
 
 MT_TOOLKIT qt = {
    _mt_gc_new_with_foreground,
@@ -71,6 +72,12 @@ QMetaThemeStyle::QMetaThemeStyle()
     toolButtonDropDownActiveWidget = NULL;
 }
 
+#define SETCOLORROLE(mode,role,g) qpalette.setColor(QPalette::mode,QPalette::role,g.color(QPalette::mode,QPalette::role));
+#define SETCOLORGROUP(mode,g) SETCOLORROLE(mode,Background,g) SETCOLORROLE(mode,Foreground,g) SETCOLORROLE(mode,Base,g) \
+    SETCOLORROLE(mode,Button,g) SETCOLORROLE(mode,ButtonText,g) SETCOLORROLE(mode,Highlight,g) SETCOLORROLE(mode,HighlightedText,g) \
+    SETCOLORROLE(mode,BrightText,g) SETCOLORROLE(mode,Light,g) SETCOLORROLE(mode,Midlight,g) SETCOLORROLE(mode,Dark,g) \
+    SETCOLORROLE(mode,Mid,g) SETCOLORROLE(mode,Shadow,g) SETCOLORROLE(mode,Link,g) SETCOLORROLE(mode,LinkVisited,g)
+
 void QMetaThemeStyle::setColorPalette(MT_COLOR_PALETTE *palette)
 {
    QPalette g;
@@ -97,9 +104,11 @@ void QMetaThemeStyle::setColorPalette(MT_COLOR_PALETTE *palette)
    g.setColor(QPalette::LinkVisited, Qt::magenta);
 
    //qpalette.setActive(g);
-   qpalette.setColor(QPalette::Active,QPalette::NoRole,g.color(QPalette::Active,QPalette::NoRole));
+   //qpalette.setColor(QPalette::Active,QPalette::NoRole,g.color(QPalette::Active,QPalette::NoRole));
+   SETCOLORGROUP(Active,g)
    //qpalette.setInactive(g);
    qpalette.setColor(QPalette::Inactive,QPalette::NoRole,g.color(QPalette::Inactive,QPalette::NoRole));
+   SETCOLORGROUP(Inactive,g)
 
    g.setColor(QPalette::Light, QColor(255, 255, 255));
    i = MT_DISABLED_FOREGROUND; g.setColor(QPalette::Text, QColor((*palette)[i].r, (*palette)[i].g, (*palette)[i].b));
@@ -107,6 +116,8 @@ void QMetaThemeStyle::setColorPalette(MT_COLOR_PALETTE *palette)
 
    //qpalette.setDisabled(g);
    qpalette.setColor(QPalette::Disabled,QPalette::NoRole,g.color(QPalette::Disabled,QPalette::NoRole));
+   SETCOLORGROUP(Disabled,g)
+   QApplication::setPalette(qpalette);
 }
 
 
@@ -269,6 +280,153 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
        break;
    }
 #endif
+#if 0
+   case CE_ScrollBarSlider:
+{
+       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
+       {
+           data.orientation = MT_VERTICAL;
+       }
+       else data.orientation = MT_HORIZONTAL;
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_HANDLE)
+if(CHECKMODE(State_Enabled))
+{
+    if(CHECKMODE(State_Raised))
+    {
+        DRAWSCROLLBARBEVEL(MT_ACTIVE)
+    }
+    else if(!CHECKMODE(State_MouseOver))
+    {
+        DRAWSCROLLBARBEVEL(MT_NORMAL)
+    }
+    else
+    {
+        qDebug("Slider Mouse Active");
+        DRAWSCROLLBARBEVEL(MT_HOVER)
+    }
+}
+else
+{
+    DRAWSCROLLBARBEVEL(MT_DISABLED)
+}
+}
+#undef DRAWSCROLLBARBEVEL
+break;
+case CE_ScrollBarAddLine:
+       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
+       {
+           data.orientation = MT_VERTICAL;
+       }
+       else data.orientation = MT_HORIZONTAL;
+ if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
+ {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_DOWN)
+     if(CHECKMODE(State_Enabled))
+     {
+         if(CHECKMODE(State_Raised))
+         {
+             DRAWSCROLLBARBEVEL(MT_ACTIVE)
+         }
+         else if(!CHECKMODE(State_MouseOver))
+         {
+             DRAWSCROLLBARBEVEL(MT_NORMAL)
+         }
+         else
+         {
+             qDebug("SubLine Mouse Active");
+             DRAWSCROLLBARBEVEL(MT_HOVER)
+         }
+     }
+     else
+     {
+         DRAWSCROLLBARBEVEL(MT_DISABLED)
+     }
+#undef DRAWSCROLLBARBEVEL
+  }
+ else
+ {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_RIGHT)
+     if(CHECKMODE(State_Enabled))
+     {
+         if(CHECKMODE(State_Raised))
+         {
+             DRAWSCROLLBARBEVEL(MT_ACTIVE)
+         }
+         else if(!CHECKMODE(State_MouseOver))
+         {
+             DRAWSCROLLBARBEVEL(MT_NORMAL)
+         }
+         else
+         {
+             qDebug("SubLine Mouse Active");
+             DRAWSCROLLBARBEVEL(MT_HOVER)
+         }
+     }
+     else
+     {
+         DRAWSCROLLBARBEVEL(MT_DISABLED)
+     }
+#undef DRAWSCROLLBARBEVEL
+  }
+  break;
+case CE_ScrollBarSubLine:
+       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
+       {
+           data.orientation = MT_VERTICAL;
+       }
+       else data.orientation = MT_HORIZONTAL;
+       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
+ {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_UP)
+     if(CHECKMODE(State_Enabled))
+     {
+         if(CHECKMODE(State_Raised))
+         {
+             DRAWSCROLLBARBEVEL(MT_ACTIVE)
+         }
+         else if(!CHECKMODE(State_MouseOver))
+         {
+             DRAWSCROLLBARBEVEL(MT_NORMAL)
+         }
+         else
+         {
+             qDebug("SubLine Mouse Active");
+             DRAWSCROLLBARBEVEL(MT_HOVER)
+         }
+     }
+     else
+     {
+         DRAWSCROLLBARBEVEL(MT_DISABLED)
+     }
+#undef DRAWSCROLLBARBEVEL
+  }
+ else
+ {
+#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_LEFT)
+     if(CHECKMODE(State_Enabled))
+     {
+         if(CHECKMODE(State_Raised))
+         {
+             DRAWSCROLLBARBEVEL(MT_ACTIVE)
+         }
+         else if(!CHECKMODE(State_MouseOver))
+         {
+             DRAWSCROLLBARBEVEL(MT_NORMAL)
+         }
+         else
+         {
+             qDebug("SubLine Mouse Active");
+             DRAWSCROLLBARBEVEL(MT_HOVER)
+         }
+     }
+     else
+     {
+         DRAWSCROLLBARBEVEL(MT_DISABLED)
+     }
+#undef DRAWSCROLLBARBEVEL
+  }
+  break;
+#endif
       case CE_CheckBox:
       case CE_RadioButton:
          QWindowsStyle::drawControl(element,opt,p,widget);
@@ -339,71 +497,6 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
                drawControl(CE_ToolButtonLabel,opt,p,widget);
     }
             break;
-#if 0
-    case CC_ComboBox:
-        if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt))
-        {
-            State flags = cmb->state;
-            SubControls sub = cmb->subControls;
-            if (sub & SC_ComboBoxEditField) {
-                if (cmb->frame) {
-                    int stateId;
-                    if (!(flags & State_Enabled))
-                        stateId = MT_DISABLED;
-                    /*else if (flags & State_HasFocus)
-                        stateId = MT_FOCUSED;*/
-                    else
-                        stateId = MT_NORMAL;
-                    //XPThemeData theme(widget, p, QLatin1String("EDIT"), partId, stateId, r);
-                    //d->drawBackground(theme);
-                    DRAWBEVEL(stateId,MT_ENTRY)
-                } else {
-                    QBrush editBrush = cmb->palette.brush(QPalette::Base);
-                    p->fillRect(opt->rect, editBrush);
-                }
-                if (!cmb->editable) {
-                    QRect re = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxEditField, widget);
-                    if (opt->state & State_HasFocus) {
-                        p->fillRect(re, opt->palette.highlight());
-                        p->setPen(opt->palette.highlightedText().color());
-                        p->setBackground(opt->palette.highlight());
-                    } else {
-                        p->fillRect(re, opt->palette.base());
-                        p->setPen(opt->palette.text().color());
-                        p->setBackground(opt->palette.base());
-                    }
-                }
-            }
-            if (sub & SC_ComboBoxArrow) {
-                int stateId;
-                /*XPThemeData theme(widget, p, QLatin1String("COMBOBOX"));
-                theme.rect = proxy()->subControlRect(CC_ComboBox, option, SC_ComboBoxArrow, widget);
-                partId = CP_DROPDOWNBUTTON;
-                if (!(flags & State_Enabled))
-                    stateId = CBXS_DISABLED;
-                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_Sunken))
-                    stateId = CBXS_PRESSED;
-                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_MouseOver))
-                    stateId = CBXS_HOT;
-                else
-                    stateId = CBXS_NORMAL;
-                theme.partId = partId;
-                theme.stateId = stateId;
-                d->drawBackground(theme);*/
-                QRect subrect = proxy()->subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow, widget);
-                if (!(flags & State_Enabled))
-                    stateId = MT_DISABLED;
-                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_Sunken))
-                    stateId = MT_ACTIVE;
-                else if (cmb->activeSubControls == SC_ComboBoxArrow && (cmb->state & State_MouseOver))
-                    stateId = MT_HOVER;
-                else
-                    stateId = MT_NORMAL;
-                DRAWSUB(stateId,MT_CHOICE_BUTTON,subrect)
-            }
-        }
-        break;
-#endif
     case CC_ComboBox:
     {
         if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt))
@@ -458,7 +551,7 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
         int flags = opt->state;
         int state = MT_NORMAL;
         data.flags = 0;
-        if (scrollbar->minimum() == scrollbar->maximum() || (flags & State_Sunken)) {
+        if (scrollbar->minimum() == scrollbar->maximum()/* || (flags & State_Sunken)*/) {
             data.flags |= MT_SCROLLBAR_UNSCROLLABLE;
         }
 
@@ -511,7 +604,7 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
                 return;
             }
 
-            if ((hoverWidget == widget && hoverPart == 1) || scrollbar->isSliderDown()) state |= MT_HOVER;
+            if ((CHECKMODE(State_MouseOver) && (active == SC_ScrollBarSlider)) || !scrollbar->isSliderDown()) state |= MT_HOVER;
 
             if (data.orientation == MT_VERTICAL) {
                 data.handle_position = slider.y() - subpage.y();
@@ -735,5 +828,51 @@ int QMetaThemeStyle::pixelMetric ( PixelMetric metric, const QStyleOption * opt,
     }
         default:
         return QWindowsStyle::pixelMetric(metric,opt,w);
+    }
+}
+
+QPalette QMetaThemeStyle::standardPalette() const
+{
+    return qpalette;
+}
+
+QRect QMetaThemeStyle::subControlRect ( ComplexControl control, const QStyleOptionComplex * opt, SubControl subControl, const QWidget * w) const
+{
+    switch(control)
+    {
+    case CC_ComboBox:
+        if (const QStyleOptionComboBox *cb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
+            QRect ret;
+            int x = cb->rect.x(),
+                y = cb->rect.y(),
+                wi = cb->rect.width(),
+                he = cb->rect.height();
+            int xpos = x;
+            int margin = cb->frame ? 3 : 0;
+            int bmarg = cb->frame ? 2 : 0;
+            xpos += wi - bmarg - 16;
+
+
+            switch (subControl) {
+            case SC_ComboBoxFrame:
+                ret = cb->rect;
+                break;
+            case SC_ComboBoxArrow:
+                ret.setRect(xpos, y, std::min(wi/2,mt_engine->metric[MT_CHOICE_BUTTON_WIDTH]), std::max(he,mt_engine->metric[MT_CHOICE_BUTTON_WIDTH]));
+                break;
+            case SC_ComboBoxEditField:
+                ret.setRect(x + margin, y + margin, wi - 2 * margin - 16, he - 2 * margin);
+                break;
+            case SC_ComboBoxListBoxPopup:
+                ret = cb->rect;
+                break;
+            default:
+                break;
+            }
+            ret = visualRect(cb->direction, cb->rect, ret);
+            return ret;
+        }
+        default:
+            return QWindowsStyle::subControlRect(control,opt,subControl,w);
     }
 }
