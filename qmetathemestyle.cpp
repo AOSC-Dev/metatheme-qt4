@@ -3,6 +3,7 @@
 #include "metathemeQt.h"
 
 #include <algorithm>
+#include <QtGui>
 
 MT_TOOLKIT qt = {
    _mt_gc_new_with_foreground,
@@ -70,6 +71,7 @@ QMetaThemeStyle::QMetaThemeStyle()
     hoverPart = 0;
     //toolButtonPopup = false;
     toolButtonDropDownActiveWidget = NULL;
+
 }
 
 #define SETCOLORROLE(mode,role,g) qpalette.setColor(QPalette::mode,QPalette::role,g.color(QPalette::mode,QPalette::role));
@@ -117,7 +119,7 @@ void QMetaThemeStyle::setColorPalette(MT_COLOR_PALETTE *palette)
    //qpalette.setDisabled(g);
    qpalette.setColor(QPalette::Disabled,QPalette::NoRole,g.color(QPalette::Disabled,QPalette::NoRole));
    SETCOLORGROUP(Disabled,g)
-   QApplication::setPalette(qpalette);
+
 }
 
 
@@ -139,6 +141,34 @@ void QMetaThemeStyle::setFont()
     opt->rect.x(),opt->rect.y(),opt->rect.width(),opt->rect.height(),&data);
 #define DRAWSUB(mode,type,ar) mt_engine->draw_widget(mt_engine,p,NULL,type,mode, \
     ar.x(),ar.y(),ar.width(),ar.height(),&data);
+#define DRAWBEVELCASE(type) \
+if(CHECKMODE(State_Enabled)) \
+{ \
+    if(CHECKMODE(State_On)) \
+    { \
+        if(!CHECKMODE(State_MouseOver)) \
+        { \
+            DRAWBEVEL(MT_ACTIVE,type) \
+        } \
+        else \
+        { \
+            DRAWBEVEL(MT_ACTIVE | MT_HOVER,type) \
+        } \
+    } \
+    else if(!CHECKMODE(State_MouseOver)) \
+    { \
+        DRAWBEVEL(MT_NORMAL,type) \
+    } \
+    else \
+    { \
+        qDebug("CheckBox Mouse Active"); \
+        DRAWBEVEL(MT_HOVER,type) \
+    } \
+} \
+else \
+{ \
+    DRAWBEVEL(MT_DISABLED,type) \
+}
 
 #define querySubControlMetrics(control, widget, mode, opt) \
     proxy()->subControlRect(control, opt, mode, widget)
@@ -239,194 +269,27 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
        p->restore();
        break;
    }
-#if 0
-   case CE_TabBarTabLabel:
+
+   case CE_ProgressBarGroove:
    {
-       //if (opt.isDefault()) break;
-
-       const QStyleOptionTab *opttab = (QStyleOptionTab*)opt;
-       //if(opttab->)
-       const QTabBar *tb = (const QTabBar *)widget;
-
-       const int t = tb->currentIndex();
-       QRect tr = opt->rect;
-       if (t == tb->currentIndex()) {
-           if (tb->shape() == QTabBar::RoundedNorth || tb->shape() == QTabBar::TriangularNorth) {
-               tr.adjust(0, mt_engine->metric[MT_NOTEBOOK_TEXT_OFFSET],0,0);
-           }
-           else {
-               tr.adjust(0, -mt_engine->metric[MT_NOTEBOOK_TEXT_OFFSET],0,0);
-           }
-       }
-
-       qDebug() << "Text Rect: " << tr << endl;
-
-       int alignment = Qt::AlignCenter/* | ShowPrefix;
-#if QT_VERSION >= 0x030300
-       if (!styleHint(SH_UnderlineAccelerator, widget, QStyleOption::Default, 0)) {
-           alignment |= NoAccel;
-       }
-#endif*/;
-
-       //drawItem(p, tr, alignment, qpalette, opt->state & State_Enabled, 0, t->text());
-       drawItemText(p,tr,alignment,qpalette,true,opttab->text);
-
-       int state;
-       state = 0;
-       QRect r = opt->rect;
-       if ((opt->state & State_HasFocus) && !tb->tabText(t).isEmpty()) {
-           mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_FOCUS_TAB, state, r.x(), r.y(), r.width(), r.height(), &data);
-       }
-       break;
+      QRect r = opt->rect;
+      const QProgressBar *pb = dynamic_cast<const QProgressBar*>(widget);
+      if(pb == NULL)break;
+      data.flags = 0;
+      data.orientation = pb->orientation() == Qt::Horizontal ? MT_HORIZONTAL : MT_VERTICAL;
+      mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_PROGRESSBAR, MT_NORMAL, r.x(), r.y(), r.width(), r.height(), &data);
+      break;
    }
-#endif
-#if 0
-   case CE_ScrollBarSlider:
-{
-       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
-       {
-           data.orientation = MT_VERTICAL;
-       }
-       else data.orientation = MT_HORIZONTAL;
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_HANDLE)
-if(CHECKMODE(State_Enabled))
-{
-    if(CHECKMODE(State_Raised))
-    {
-        DRAWSCROLLBARBEVEL(MT_ACTIVE)
-    }
-    else if(!CHECKMODE(State_MouseOver))
-    {
-        DRAWSCROLLBARBEVEL(MT_NORMAL)
-    }
-    else
-    {
-        qDebug("Slider Mouse Active");
-        DRAWSCROLLBARBEVEL(MT_HOVER)
-    }
-}
-else
-{
-    DRAWSCROLLBARBEVEL(MT_DISABLED)
-}
-}
-#undef DRAWSCROLLBARBEVEL
-break;
-case CE_ScrollBarAddLine:
-       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
-       {
-           data.orientation = MT_VERTICAL;
-       }
-       else data.orientation = MT_HORIZONTAL;
- if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
- {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_DOWN)
-     if(CHECKMODE(State_Enabled))
-     {
-         if(CHECKMODE(State_Raised))
-         {
-             DRAWSCROLLBARBEVEL(MT_ACTIVE)
-         }
-         else if(!CHECKMODE(State_MouseOver))
-         {
-             DRAWSCROLLBARBEVEL(MT_NORMAL)
-         }
-         else
-         {
-             qDebug("SubLine Mouse Active");
-             DRAWSCROLLBARBEVEL(MT_HOVER)
-         }
-     }
-     else
-     {
-         DRAWSCROLLBARBEVEL(MT_DISABLED)
-     }
-#undef DRAWSCROLLBARBEVEL
-  }
- else
- {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_RIGHT)
-     if(CHECKMODE(State_Enabled))
-     {
-         if(CHECKMODE(State_Raised))
-         {
-             DRAWSCROLLBARBEVEL(MT_ACTIVE)
-         }
-         else if(!CHECKMODE(State_MouseOver))
-         {
-             DRAWSCROLLBARBEVEL(MT_NORMAL)
-         }
-         else
-         {
-             qDebug("SubLine Mouse Active");
-             DRAWSCROLLBARBEVEL(MT_HOVER)
-         }
-     }
-     else
-     {
-         DRAWSCROLLBARBEVEL(MT_DISABLED)
-     }
-#undef DRAWSCROLLBARBEVEL
-  }
-  break;
-case CE_ScrollBarSubLine:
-       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
-       {
-           data.orientation = MT_VERTICAL;
-       }
-       else data.orientation = MT_HORIZONTAL;
-       if(widget != NULL && ((QScrollBar*) widget)->orientation() == Qt::Vertical)
- {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_UP)
-     if(CHECKMODE(State_Enabled))
-     {
-         if(CHECKMODE(State_Raised))
-         {
-             DRAWSCROLLBARBEVEL(MT_ACTIVE)
-         }
-         else if(!CHECKMODE(State_MouseOver))
-         {
-             DRAWSCROLLBARBEVEL(MT_NORMAL)
-         }
-         else
-         {
-             qDebug("SubLine Mouse Active");
-             DRAWSCROLLBARBEVEL(MT_HOVER)
-         }
-     }
-     else
-     {
-         DRAWSCROLLBARBEVEL(MT_DISABLED)
-     }
-#undef DRAWSCROLLBARBEVEL
-  }
- else
- {
-#define DRAWSCROLLBARBEVEL(mode) DRAWBEVEL(mode,MT_SCROLLBAR_ARROW_LEFT)
-     if(CHECKMODE(State_Enabled))
-     {
-         if(CHECKMODE(State_Raised))
-         {
-             DRAWSCROLLBARBEVEL(MT_ACTIVE)
-         }
-         else if(!CHECKMODE(State_MouseOver))
-         {
-             DRAWSCROLLBARBEVEL(MT_NORMAL)
-         }
-         else
-         {
-             qDebug("SubLine Mouse Active");
-             DRAWSCROLLBARBEVEL(MT_HOVER)
-         }
-     }
-     else
-     {
-         DRAWSCROLLBARBEVEL(MT_DISABLED)
-     }
-#undef DRAWSCROLLBARBEVEL
-  }
-  break;
-#endif
+
+   case CE_ProgressBarContents:
+   {
+      QRect r = opt->rect;
+      const QProgressBar *pb = dynamic_cast<const QProgressBar*>(widget);
+      data.flags = 0;
+      data.orientation = pb->orientation() == Qt::Horizontal ? MT_HORIZONTAL : MT_VERTICAL;
+      mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_PROGRESSBAR_SLIDER, MT_NORMAL, r.x(), r.y(), (int)((double)r.width() * ((double)pb->value() / (double)pb->maximum())), r.height(), &data);
+      break;
+   }
       case CE_CheckBox:
       case CE_RadioButton:
          QWindowsStyle::drawControl(element,opt,p,widget);
@@ -466,6 +329,19 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
 {
     MT_WIDGET_DATA data;
     mt_color_set(data.background_color, qpalette.background().color().red(), qpalette.background().color().green(), qpalette.background().color().blue());
+    int state;
+    if(!CHECKMODE(State_Enabled))
+    {
+        state = MT_DISABLED;
+    }
+    else
+    {
+        if(CHECKMODE(State_Active))
+            state = MT_ACTIVE;
+        else if (CHECKMODE(State_MouseOver))
+            state = MT_HOVER;
+        else state = MT_NORMAL;
+    }
     switch(control)
     {
 #define DRAWTOOLBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_TOOLBAR_ITEM)
@@ -502,7 +378,6 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
         if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt))
         {
             QRect re;
-            int state;
             int flags = opt->state;
             //if (hoverWidget == widget) state |= MT_HOVER;
             if (!(flags & State_Enabled))
@@ -536,11 +411,6 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
             break;
         }
     }
-#if 0
-    case CC_ScrollBar:
-            QWindowsStyle::drawComplexControl(control,opt,p,widget);
-            break;
-#endif
     case CC_ScrollBar:
     {
         const QScrollBar *scrollbar = (const QScrollBar *) widget;
@@ -549,7 +419,6 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
         int controls = opt->subControls;
         int active = opt->activeSubControls;
         int flags = opt->state;
-        int state = MT_NORMAL;
         data.flags = 0;
         if (scrollbar->minimum() == scrollbar->maximum()/* || (flags & State_Sunken)*/) {
             data.flags |= MT_SCROLLBAR_UNSCROLLABLE;
@@ -663,6 +532,29 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
         }
         break;
     }
+    case CC_Slider:
+    {
+       const QSlider *sl = (const QSlider *)widget;
+       QRect groove = querySubControlMetrics(CC_Slider, widget, SC_SliderGroove, opt);
+       QRect handle = querySubControlMetrics(CC_Slider, widget, SC_SliderHandle, opt);
+
+       data.orientation = (sl->orientation() == Qt::Horizontal)? MT_HORIZONTAL : MT_VERTICAL;
+
+       if (opt->subControls & SC_SliderGroove) {
+          mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_SCALE, state, groove.x(), groove.y(), groove.width(), groove.height(), &data);
+       }
+
+       if (opt->subControls & SC_SliderTickmarks) {
+          QCommonStyle::drawComplexControl(control,opt,p,widget);
+       }
+
+       if (opt->subControls & SC_SliderHandle) {
+          mt_engine->draw_widget(mt_engine, (MT_WINDOW *)p, NULL, MT_SCALE_HANDLE, state, handle.x(), handle.y(), handle.width(), handle.height(), &data);
+       }
+       break;
+    }
+
+
         default:
             BaseStyle::drawComplexControl(control,opt,p,widget);
     }
@@ -786,6 +678,58 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
         break;
 #undef DRAWBOXBEVEL
     }
+    case PE_PanelLineEdit:
+    {
+#define DRAWBOXBEVEL(mode) DRAWBEVEL(mode,MT_ENTRY_BORDER)
+        //QStyleOptionButton *optbtn = (QStyleOptionButton *)opt;
+        if(CHECKMODE(State_On))
+        {
+            //data.flags |= MT_DRAW_MASK;
+            qDebug("Checkbox On");
+        }
+        qDebug("%d %d %d %d",((int)opt->state),
+               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
+        if(CHECKMODE(State_Enabled))
+        {
+            if(CHECKMODE(State_On))
+            {
+                if(!CHECKMODE(State_MouseOver))
+                {
+                    DRAWBOXBEVEL(MT_ACTIVE)
+                }
+                else
+                {
+                    DRAWBOXBEVEL(MT_ACTIVE | MT_HOVER)
+                }
+            }
+            else if(!CHECKMODE(State_MouseOver))
+            {
+                DRAWBOXBEVEL(MT_NORMAL)
+            }
+            else
+            {
+                qDebug("CheckBox Mouse Active");
+                DRAWBOXBEVEL(MT_HOVER)
+            }
+        }
+        else
+        {
+            DRAWBOXBEVEL(MT_DISABLED)
+        }
+        break;
+#undef DRAWBOXBEVEL
+    }
+    case PE_IndicatorSpinUp:
+    {DRAWBEVELCASE(MT_SPINBUTTON_UP)}break;
+    case PE_IndicatorSpinDown:
+    {DRAWBEVELCASE(MT_SPINBUTTON_DOWN)}break;
+    case PE_IndicatorSpinPlus:
+    {DRAWBEVELCASE(MT_SPINBUTTON_UP)}break;
+    case PE_IndicatorSpinMinus:
+    {DRAWBEVELCASE(MT_SPINBUTTON_DOWN)}break;
+        case PE_PanelMenuBar:
+        {DRAWBEVELCASE(MT_MENUBAR)}break;
+        break;
         default:
             BaseStyle::drawPrimitive(element,opt,p,widget);
     }
@@ -872,7 +816,23 @@ QRect QMetaThemeStyle::subControlRect ( ComplexControl control, const QStyleOpti
             ret = visualRect(cb->direction, cb->rect, ret);
             return ret;
         }
+
         default:
             return QWindowsStyle::subControlRect(control,opt,subControl,w);
+    }
+}
+
+void QMetaThemeStyle::polish ( QApplication * application )
+{
+    QWindowsStyle::polish(application);
+    application->setPalette(qpalette);
+}
+
+int QMetaThemeStyle::styleHint ( StyleHint hint, const QStyleOption * opt, const QWidget * w, QStyleHintReturn * ret) const
+{
+    switch(hint)
+    {
+        default:
+            return QWindowsStyle::styleHint(hint,opt,w,ret);
     }
 }

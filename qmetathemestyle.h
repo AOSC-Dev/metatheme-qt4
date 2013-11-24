@@ -40,6 +40,8 @@ public:
     int pixelMetric ( PixelMetric metric, const QStyleOption * option = 0, const QWidget * widget = 0 ) const;
     QPalette standardPalette () const;
     QRect subControlRect ( ComplexControl control, const QStyleOptionComplex * option, SubControl subControl, const QWidget * widget = 0 ) const;
+    void polish ( QApplication * application );
+    int styleHint ( StyleHint hint, const QStyleOption * option = 0, const QWidget * widget = 0, QStyleHintReturn * returnData = 0 ) const;
 
 private:
    MT_ENGINE *mt_engine;
