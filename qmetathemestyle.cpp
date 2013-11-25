@@ -161,7 +161,6 @@ if(CHECKMODE(State_Enabled)) \
     } \
     else \
     { \
-        qDebug("CheckBox Mouse Active"); \
         DRAWBEVEL(MT_HOVER,type) \
     } \
 } \
@@ -185,8 +184,6 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
    {
 #define DRAWBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_BUTTON)
          const QStyleOptionButton *optbtn = (const QStyleOptionButton*)opt;
-         qDebug("%d %d %d %d",((int)optbtn->state),
-                CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
          if(CHECKMODE(State_Enabled))
          {
              if(!CHECKMODE(State_Raised))
@@ -199,7 +196,6 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
              }
              else
              {
-                 qDebug("PushButton Mouse Active");
                  DRAWBUTTONBEVEL(MT_HOVER)
              }
          }
@@ -241,7 +237,6 @@ void QMetaThemeStyle::drawControl(ControlElement element,const QStyleOption *opt
       }
       */
        QRect r = opt->rect;
-       qDebug() << "Tab Rect: " << r << endl;
        int state;
        //state = 0;
        if(CHECKMODE(State_Enabled))
@@ -348,8 +343,6 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
         case CC_ToolButton:
             {
         const QStyleOptionToolButton *optbtn = (const QStyleOptionToolButton*)opt;
-               qDebug("%d %d %d %d",((int)optbtn->state),
-                      CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
                if(CHECKMODE(State_Enabled))
                {
                    if(!CHECKMODE(State_Raised))
@@ -362,7 +355,6 @@ void QMetaThemeStyle::drawComplexControl ( ComplexControl control, const QStyleO
                    }
                    else
                    {
-                       qDebug("Mouse Active");
                        DRAWTOOLBUTTONBEVEL(MT_HOVER)
                    }
                }
@@ -571,8 +563,6 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
     {
 #define DRAWBUTTONBEVEL(mode) DRAWBEVEL(mode,MT_BUTTON)
         const QStyleOptionButton *optbtn = (const QStyleOptionButton*)opt;
-        qDebug("%d %d %d %d",((int)optbtn->state),
-               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
         if(CHECKMODE(State_Enabled))
         {
             if(CHECKMODE(State_Raised))
@@ -585,7 +575,6 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
             }
             else
             {
-                qDebug("PushButton Mouse Active");
                 DRAWBUTTONBEVEL(MT_HOVER)
             }
         }
@@ -603,10 +592,7 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
         if(CHECKMODE(State_On))
         {
             //data.flags |= MT_DRAW_MASK;
-            qDebug("Checkbox On");
         }
-        qDebug("%d %d %d %d",((int)opt->state),
-               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
         if(CHECKMODE(State_Enabled))
         {
             if(CHECKMODE(State_On))
@@ -626,7 +612,6 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
             }
             else
             {
-                qDebug("CheckBox Mouse Active");
                 DRAWBOXBEVEL(MT_HOVER)
             }
         }
@@ -644,10 +629,7 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
         if(CHECKMODE(State_On))
         {
             //data.flags |= MT_DRAW_MASK;
-            qDebug("Checkbox On");
         }
-        qDebug("%d %d %d %d",((int)opt->state),
-               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
         if(CHECKMODE(State_Enabled))
         {
             if(CHECKMODE(State_On))
@@ -667,7 +649,6 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
             }
             else
             {
-                qDebug("CheckBox Mouse Active");
                 DRAWBOXBEVEL(MT_HOVER)
             }
         }
@@ -681,14 +662,6 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
     case PE_PanelLineEdit:
     {
 #define DRAWBOXBEVEL(mode) DRAWBEVEL(mode,MT_ENTRY_BORDER)
-        //QStyleOptionButton *optbtn = (QStyleOptionButton *)opt;
-        if(CHECKMODE(State_On))
-        {
-            //data.flags |= MT_DRAW_MASK;
-            qDebug("Checkbox On");
-        }
-        qDebug("%d %d %d %d",((int)opt->state),
-               CHECKMODE(State_Enabled),CHECKMODE(State_Raised),CHECKMODE(State_MouseOver));
         if(CHECKMODE(State_Enabled))
         {
             if(CHECKMODE(State_On))
@@ -708,7 +681,6 @@ void QMetaThemeStyle::drawPrimitive ( PrimitiveElement element, const QStyleOpti
             }
             else
             {
-                qDebug("CheckBox Mouse Active");
                 DRAWBOXBEVEL(MT_HOVER)
             }
         }
@@ -832,6 +804,8 @@ int QMetaThemeStyle::styleHint ( StyleHint hint, const QStyleOption * opt, const
 {
     switch(hint)
     {
+        case SH_DialogButtonBox_ButtonsHaveIcons:
+            return BaseStyle::styleHint(hint,opt,w,ret);
         default:
             return QWindowsStyle::styleHint(hint,opt,w,ret);
     }
